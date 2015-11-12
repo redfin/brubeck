@@ -18,6 +18,8 @@ static inline bool statsd_parse_buffer(struct brubeck_statsd *statsd, char *buff
 	struct brubeck_server *server = statsd->sampler.server;
 	struct brubeck_metric *metric;
 
+	brubeck_atomic_inc(&server->stats.metrics);
+
 	if (brubeck_statsd_msg_parse(&msg, buffer, (size_t)len) < 0) {
 		if (msg.key_len > 0)
 			buffer[msg.key_len] = ':';
@@ -67,7 +69,6 @@ static void statsd_run_recvmmsg(struct brubeck_statsd *statsd, int sock)
 		}
 
 		/* store stats */
-		brubeck_atomic_add(&server->stats.metrics, SIM_PACKETS);
 		brubeck_atomic_add(&statsd->sampler.inflow, SIM_PACKETS);
 
 		for (i = 0; i < SIM_PACKETS; ++i) {
@@ -110,7 +111,6 @@ static void statsd_run_recvmsg(struct brubeck_statsd *statsd, int sock)
 		}
 
 		/* store stats */
-		brubeck_atomic_inc(&server->stats.metrics);
 		brubeck_atomic_inc(&statsd->sampler.inflow);
 
 		if(!statsd_parse_buffer(statsd, buffer, res)) {
