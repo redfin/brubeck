@@ -67,3 +67,5 @@ clean:
 	-rm -f $(OBJECTS) brubeck.o
 	-rm -f $(TEST_OBJ)
 	-rm -f $(TARGET) $(TARGET)_test
+
+.DELETE_ON_ERROR:
