@@ -77,6 +77,9 @@ void test_statsd_msg__split_buffer(void)
 	try_split(&sampler,
 		"missing.metric.type:0\n"
 		"ab.cd.ef:0|g\n"
+		":0|g\n"
+		":0\n"
+		"|g\n"
 		"missing.metric.value|g\n"
 		"ghi.jkl.mnop:-1|g"
 		, 2);
