@@ -157,7 +157,7 @@ int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer)
 		*buffer++ = '\0';
 
 		/* Corrupted metric. Graphite won't swallow this */
-		if (msg->key[msg->key_len - 1] == '.')
+		if (msg->key_len == 0 || msg->key[msg->key_len - 1] == '.')
 			return -1;
 	}
 
