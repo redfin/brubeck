@@ -29,7 +29,8 @@ struct brubeck_statsd_secure {
 	pthread_t thread;
 };
 
-int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer, size_t length);
+int brubeck_statsd_split_buffer(struct brubeck_sampler *sampler, char *buffer, size_t len, struct in_addr *src);
+int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer);
 
 struct brubeck_sampler * brubeck_statsd_secure_new(struct brubeck_server *server, json_t *settings);
 struct brubeck_sampler *brubeck_statsd_new(struct brubeck_server *server, json_t *settings);

@@ -6,20 +6,18 @@
 static void try_parse(struct brubeck_statsd_msg *msg, const char *msg_text, double expected)
 {
 	char buffer[64];
-	size_t len = strlen(msg_text);
-	memcpy(buffer, msg_text, len);
+	strcpy(buffer, msg_text);
 
-	sput_fail_unless(brubeck_statsd_msg_parse(msg, buffer, len) == 0, msg_text);
+	sput_fail_unless(brubeck_statsd_msg_parse(msg, buffer) == 0, msg_text);
 	sput_fail_unless(expected == msg->value.n, "msg.value.n == expected");
 }
 
 static void try_parse_set(struct brubeck_statsd_msg *msg, const char *msg_text, const char *expected)
 {
 	char buffer[64];
-	size_t len = strlen(msg_text);
-	memcpy(buffer, msg_text, len);
+	strcpy(buffer, msg_text);
 
-	sput_fail_unless(brubeck_statsd_msg_parse(msg, buffer, len) == 0, msg_text);
+	sput_fail_unless(brubeck_statsd_msg_parse(msg, buffer) == 0, msg_text);
 	sput_fail_unless(0 == strcmp(msg->value.s, expected), "msg.value.s == expected");
 }
 
