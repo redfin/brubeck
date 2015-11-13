@@ -12,7 +12,7 @@
 
 #define MAX_PACKET_SIZE 512
 
-static inline bool statsd_parse_buffer(struct brubeck_statsd *statsd, char *buffer, int len)
+static inline void statsd_parse_buffer(struct brubeck_statsd *statsd, char *buffer, int len, struct in_addr *src)
 {
 	struct brubeck_statsd_msg msg;
 	struct brubeck_server *server = statsd->sampler.server;
@@ -20,19 +20,20 @@ static inline bool statsd_parse_buffer(struct brubeck_statsd *statsd, char *buff
 
 	brubeck_atomic_inc(&server->stats.metrics);
 
-	if (brubeck_statsd_msg_parse(&msg, buffer, (size_t)len) < 0) {
+	if (0 == brubeck_statsd_msg_parse(&msg, buffer, (size_t)len)) {
+		metric = brubeck_metric_find(server, msg.key, msg.key_len, msg.type);
+		if (metric != NULL) {
+			brubeck_metric_record(metric, msg.value);
+		}
+	} else {
 		if (msg.key_len > 0)
 			buffer[msg.key_len] = ':';
 
-		brubeck_server_mark_dropped(server);
-		return false;
-	}
+		log_splunk("sampler=statsd event=bad_key key='%.*s' from=%s",
+			len, buffer, inet_ntoa(*src));
 
-	metric = brubeck_metric_find(server, msg.key, msg.key_len, msg.type);
-	if (metric != NULL) {
-		brubeck_metric_record(metric, msg.value);
+		brubeck_server_mark_dropped(server);
 	}
-	return true;
 }
 
 #ifdef HAVE_RECVMMSG
@@ -52,6 +53,8 @@ static void statsd_run_recvmmsg(struct brubeck_statsd *statsd, int sock)
 		iovecs[i].iov_len = MAX_PACKET_SIZE - 1;
 		msgs[i].msg_hdr.msg_iov = &iovecs[i];
 		msgs[i].msg_hdr.msg_iovlen = 1;
+		msgs[i].msg_hdr.msg_name = xmalloc(sizeof(struct in_addr));
+		msgs[i].msg_hdr.msg_namelen = sizeof(struct in_addr);
 	}
 
 	log_splunk("sampler=statsd event=worker_online syscall=recvmmsg socket=%d", sock);
@@ -72,13 +75,9 @@ static void statsd_run_recvmmsg(struct brubeck_statsd *statsd, int sock)
 		brubeck_atomic_add(&statsd->sampler.inflow, SIM_PACKETS);
 
 		for (i = 0; i < SIM_PACKETS; ++i) {
-
 			char *buf = msgs[i].msg_hdr.msg_iov->iov_base;
 			int len = msgs[i].msg_len;
-
-			if(!statsd_parse_buffer(statsd, buf, len)) {
-				log_splunk("sampler=statsd event=bad_key key='%.*s'", len, buf);
-			}
+			statsd_parse_buffer(statsd, buf, len, msgs[i].msg_hdr.msg_name);
 		}
 	}
 }
@@ -113,10 +112,7 @@ static void statsd_run_recvmsg(struct brubeck_statsd *statsd, int sock)
 		/* store stats */
 		brubeck_atomic_inc(&statsd->sampler.inflow);
 
-		if(!statsd_parse_buffer(statsd, buffer, res)) {
-			log_splunk("sampler=statsd event=bad_key key='%.*s' from=%s",
-				res, buffer, inet_ntoa(reporter.sin_addr));
-		}
+		statsd_parse_buffer(statsd, buffer, res, &reporter.sin_addr);
 	}
 }
 
