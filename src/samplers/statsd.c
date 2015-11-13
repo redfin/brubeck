@@ -20,6 +20,7 @@ brubeck_statsd_split_buffer(struct brubeck_sampler *sampler, char *buffer, size_
 	struct brubeck_metric *metric;
 	char *end = buffer + len;
 	char * const last = end;
+	int metric_count = 0;
 
 	for(*last = '\n'; buffer < last && (end = rawmemchr(buffer, '\n')); buffer = end) {
 		*end++ = '\0';
@@ -32,6 +33,7 @@ brubeck_statsd_split_buffer(struct brubeck_sampler *sampler, char *buffer, size_
 			if (metric != NULL) {
 				brubeck_metric_record(metric, msg.value);
 			}
+			metric_count++;
 		} else {
 			int l = end - buffer;
 			if (msg.key_len > 0)
@@ -46,6 +48,7 @@ brubeck_statsd_split_buffer(struct brubeck_sampler *sampler, char *buffer, size_
 			brubeck_server_mark_dropped(server);
 		}
 	}
+	return metric_count;
 }
 
 #ifdef HAVE_RECVMMSG
