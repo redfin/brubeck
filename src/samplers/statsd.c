@@ -31,7 +31,7 @@ brubeck_statsd_split_buffer(struct brubeck_sampler *sampler, char *buffer, size_
 		if (0 == brubeck_statsd_msg_parse(&msg, buffer)) {
 			metric = brubeck_metric_find(server, msg.key, msg.key_len, msg.type);
 			if (metric != NULL) {
-				brubeck_metric_record(metric, msg.value);
+				brubeck_metric_record(metric, msg.value, msg.sample_rate);
 			}
 			metric_count++;
 		} else {
@@ -212,10 +212,11 @@ int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer)
 	{
 		buffer++;
 
+		msg->sample_rate = 1.0;
 		if (buffer[0] == '\0' || (buffer[0] == '\n' && buffer[1] == '\0')) {
-			msg->trail = NULL;
+			// TODO msg->trail = NULL;
 		} else if (*buffer == '@' || *buffer == '|') {
-			msg->trail = buffer;
+			// TODO msg->trail = buffer;
 		} else {
 			return -1;
 		}
