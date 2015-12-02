@@ -6,6 +6,7 @@ struct sput __sput;
 void test_histogram__sampling(void);
 void test_histogram__single_element(void);
 void test_histogram__large_range(void);
+void test_histogram__scaling(void);
 
 void test_mstore__save(void);
 void test_atomic_spinlocks(void);
@@ -21,6 +22,7 @@ int main(int argc, char *argv[])
 	sput_run_test(test_histogram__sampling);
 	sput_run_test(test_histogram__single_element);
 	sput_run_test(test_histogram__large_range);
+	sput_run_test(test_histogram__scaling);
 
 	sput_enter_suite("mstore: concurrency test for metrics hash table");
 	sput_run_test(test_mstore__save);
