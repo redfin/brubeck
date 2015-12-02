@@ -8,7 +8,7 @@ struct brubeck_statsd_msg {
     uint16_t key_len; /* length of the key */
     uint16_t type;	/* type of the messaged, as a brubeck_mt_t */
     sample_value_t value;	/* value of the message */
-    char *trail;    /* Any data following the 'key:value|type' construct, NULL terminated*/
+    value_t sample_rate; /* optional sample rate of the message */
 };
 
 struct brubeck_statsd {
