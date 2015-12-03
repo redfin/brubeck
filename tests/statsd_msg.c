@@ -42,6 +42,7 @@ static struct { char *metric; int parse; double expected; } test_values[] = {
 	{ "github.auth.fingerprint.sha1:1|g", 0, 1 },
 	{ "lol:1|ms", 0, 1 },
 	{ "lol.b:2|ms@0.1", 0, 2 },
+	{ "lol.b:2|ms@nan", -1, -1 },
 	{ "lol.b:2|ms@-0.1", -1, 2 },
 	{ "lol.b:2|ms@1.14", -1, 2 },
 	{ "this.is.sparta:199812|C", 0, 199812 },
