@@ -45,6 +45,7 @@ static struct { char *metric; int parse; double expected; } test_values[] = {
 	{ "lol.b:2|ms@nan", -1, -1 },
 	{ "lol.b:2|ms@-0.1", -1, 2 },
 	{ "lol.b:2|ms@1.14", -1, 2 },
+	{ "lol.c:2|ms|@1.14", -1, 2 },
 	{ "this.is.sparta:199812|C", 0, 199812 },
 	{ "this.is.sparta:0012|h", 0, 12 },
 	{ "this.is.sparta:23.23|g", 0, 23.23 },
