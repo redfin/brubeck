@@ -201,8 +201,7 @@ int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer)
 
 	/**
 	 * Trailing bytes: data appended at the end of the message.
-	 * This is stored verbatim and will be parsed when processing
-	 * the specific message type. This is optional.
+	 * Used by some metric types as an optional sample rate.
 	 *
 	 *      gorets:1|c|@0.1
 	 *                 ^^^^----
