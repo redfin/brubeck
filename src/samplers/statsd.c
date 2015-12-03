@@ -216,7 +216,7 @@ int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer)
 			msg->sample_rate = 1.0;
 		} else if (*buffer == '@' || *buffer == '|') {
 			msg->sample_rate = atof(buffer + 1);
-			if (msg->sample_rate <= 0.0 || msg->sample_rate > 1.0)
+			if (!(msg->sample_rate > 0.0 && msg->sample_rate <= 1.0))
 				return -1;
 		} else {
 			return -1;
