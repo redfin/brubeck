@@ -57,7 +57,7 @@ void test_histogram__single_element(void)
 
 	sput_fail_unless(sample.min == 42.0, 0);
 	sput_fail_unless(sample.max == 42.0, 0);
-	sput_fail_unless(sample.percentile[3] == 42.0, 0);
+	sput_fail_unless(sample.percentile[PC_99] == 42.0, 0);
 	sput_fail_unless(sample.mean == 42.0, 0);
 	sput_fail_unless(sample.count == 1, 0);
 	sput_fail_unless(sample.sum == 42.0, 0);
@@ -98,7 +98,8 @@ void test_histogram__scaling(void)
 
 	sput_fail_unless(sample.min == 1.0, 0);
 	sput_fail_unless(sample.max == 4.0, 0);
-	sput_fail_unless(sample.percentile[PC_75] == 3.0, 0);
+	sput_fail_unless(sample.percentile[PC_90] == 4.0, 0);
+	sput_fail_unless(sample.percentile[PC_95] == 4.0, 0);
 	sput_fail_unless(sample.percentile[PC_99] == 4.0, 0);
 	sput_fail_unless(sample.median == 2.0, 0);
 	sput_fail_unless(sample.count == 4, 0);
@@ -121,11 +122,9 @@ void test_histogram__scaling(void)
 	sput_fail_unless(sample.median == 1.0, 0);
 	sput_fail_unless(sample.count == 103, 0);
 	sput_fail_unless(sample.sum == 109.0, 0);
-	sput_fail_unless(sample.percentile[PC_75] == 1.0, 0);
+	sput_fail_unless(sample.percentile[PC_90] == 1.0, 0);
 	sput_fail_unless(sample.percentile[PC_95] == 1.0, 0);
-	sput_fail_unless(sample.percentile[PC_98] == 2.0, 0);
 	sput_fail_unless(sample.percentile[PC_99] == 3.0, 0);
-	sput_fail_unless(sample.percentile[PC_999] == 4.0, 0);
 
 	free(h.values);
 	memset(&h, 0x0, sizeof(h));
@@ -144,9 +143,7 @@ void test_histogram__scaling(void)
 	sput_fail_unless(sample.median == 2.0, 0);
 	sput_fail_unless(sample.count == 103, 0);
 	sput_fail_unless(sample.sum == 208.0, 0);
-	sput_fail_unless(sample.percentile[PC_75] == 2.0, 0);
+	sput_fail_unless(sample.percentile[PC_90] == 2.0, 0);
 	sput_fail_unless(sample.percentile[PC_95] == 2.0, 0);
-	sput_fail_unless(sample.percentile[PC_98] == 2.0, 0);
 	sput_fail_unless(sample.percentile[PC_99] == 3.0, 0);
-	sput_fail_unless(sample.percentile[PC_999] == 4.0, 0);
 }
