@@ -157,7 +157,7 @@ histogram__sample(struct brubeck_metric *metric, brubeck_sample_cb sample, void 
 	/* alloc space for this on the stack. we need enough for:
 	 * key_length + longest_suffix + null terminator
 	 */
-	key = alloca(metric->key_len + strlen(".percentile.999") + 1);
+	key = alloca(metric->key_len + strlen(".upper_99") + 1);
 	memcpy(key, metric->key, metric->key_len);
 
 	WITH_SUFFIX(".lower") {
@@ -184,24 +184,16 @@ histogram__sample(struct brubeck_metric *metric, brubeck_sample_cb sample, void 
 		sample(key, hsample.median, opaque);
 	}
 
-	WITH_SUFFIX(".percentile.75") {
-		sample(key, hsample.percentile[PC_75], opaque);
+	WITH_SUFFIX(".upper_90") {
+		sample(key, hsample.percentile[PC_90], opaque);
 	}
 
-	WITH_SUFFIX(".percentile.95") {
+	WITH_SUFFIX(".upper_95") {
 		sample(key, hsample.percentile[PC_95], opaque);
 	}
 
-	WITH_SUFFIX(".percentile.98") {
-		sample(key, hsample.percentile[PC_98], opaque);
-	}
-
-	WITH_SUFFIX(".percentile.99") {
+	WITH_SUFFIX(".upper_99") {
 		sample(key, hsample.percentile[PC_99], opaque);
-	}
-
-	WITH_SUFFIX(".percentile.999") {
-		sample(key, hsample.percentile[PC_999], opaque);
 	}
 }
 
