@@ -214,12 +214,13 @@ int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer)
 
 		if (buffer[0] == '\0' || (buffer[0] == '\n' && buffer[1] == '\0')) {
 			msg->sample_rate = 1.0;
-		} else if (*buffer == '@' || *buffer == '|') {
-			msg->sample_rate = atof(buffer + 1);
+		} else {
+			while (*buffer == '@' || *buffer == '|') {
+				buffer++;
+			}
+			msg->sample_rate = atof(buffer);
 			if (!(msg->sample_rate > 0.0 && msg->sample_rate <= 1.0))
 				return -1;
-		} else {
-			return -1;
 		}
 	}
 
