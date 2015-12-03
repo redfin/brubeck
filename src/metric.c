@@ -160,11 +160,11 @@ histogram__sample(struct brubeck_metric *metric, brubeck_sample_cb sample, void 
 	key = alloca(metric->key_len + strlen(".percentile.999") + 1);
 	memcpy(key, metric->key, metric->key_len);
 
-	WITH_SUFFIX(".min") {
+	WITH_SUFFIX(".lower") {
 		sample(key, hsample.min, opaque);
 	}
 
-	WITH_SUFFIX(".max") {
+	WITH_SUFFIX(".upper") {
 		sample(key, hsample.max, opaque);
 	}
 
