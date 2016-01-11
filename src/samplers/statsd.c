@@ -21,6 +21,7 @@ brubeck_statsd_split_buffer(struct brubeck_sampler *sampler, char *buffer, size_
 	char *end = buffer + len;
 	char * const last = end;
 	int metric_count = 0;
+	int err;
 
 	for(*last = '\n'; buffer < last && (end = rawmemchr(buffer, '\n')); buffer = end) {
 		*end++ = '\0';
@@ -28,7 +29,8 @@ brubeck_statsd_split_buffer(struct brubeck_sampler *sampler, char *buffer, size_
 		// maybe only count metrics that parse successfully?
 		brubeck_atomic_inc(&server->stats.metrics);
 
-		if (0 == brubeck_statsd_msg_parse(&msg, buffer)) {
+		err = brubeck_statsd_msg_parse(&msg, buffer);
+		if (0 == err) {
 			metric = brubeck_metric_find(server, msg.key, msg.key_len, msg.type);
 			if (metric != NULL) {
 				brubeck_metric_record(metric, msg.value, msg.sample_rate);
@@ -42,8 +44,8 @@ brubeck_statsd_split_buffer(struct brubeck_sampler *sampler, char *buffer, size_
 			char *sampler_type = (sampler->type == BRUBECK_SAMPLER_STATSD)
 				? "statsd"
 				: "statsd-secure";
-			log_splunk("sampler=%s event=bad_key key='%.*s' from=%s",
-				sampler_type, l, buffer, inet_ntoa(*src));
+			log_splunk("sampler=%s event=bad_key err=%d key='%.*s' from=%s",
+				sampler_type, err, l, buffer, inet_ntoa(*src));
 
 			brubeck_server_mark_dropped(server);
 		}
