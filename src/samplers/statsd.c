@@ -151,14 +151,14 @@ int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer)
 			++buffer;
 		}
 		if (*buffer == '\0')
-			return -1;
+			return 1;
 
 		msg->key_len = buffer - msg->key;
 		*buffer++ = '\0';
 
 		/* Corrupted metric. Graphite won't swallow this */
 		if (msg->key_len == 0 || msg->key[msg->key_len - 1] == '.')
-			return -1;
+			return 2;
 	}
 
 	/**
@@ -174,7 +174,7 @@ int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer)
 
 		while(*buffer != '|') {
 			if(*buffer == '\0' || *buffer == '\n')
-				return -1;
+				return 3;
 			++buffer;
 		}
 		*buffer++ = '\0';	// null-terminate value
@@ -193,10 +193,10 @@ int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer)
 					}
 
 			default:
-					return -1;
+					return 4;
 		}
 		if(-1 == msg->type)
-			return -1;
+			return 5;
 	}
 
 	/**
@@ -217,7 +217,7 @@ int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer)
 			}
 			msg->sample_rate = atof(buffer);
 			if (!(msg->sample_rate > 0.0 && msg->sample_rate <= 1.0))
-				return -1;
+				return 6;
 		}
 	}
 
@@ -271,7 +271,7 @@ int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer)
 		}
 
 		if (*buffer != '\0')
-			return -1;
+			return 7;
 	}
 	return 0;
 }

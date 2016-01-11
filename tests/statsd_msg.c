@@ -38,14 +38,14 @@ static void try_split(struct brubeck_sampler *sampler, const char *input, int ex
 
 static struct { char *metric; int parse; double expected; } test_values[] = {
 	{ "github.auth.fingerprint.sha1:1|c", 0, 1 },
-	{ "github.auth.fingerprint.sha1:1|c|@args", -1, 1 },
+	{ "github.auth.fingerprint.sha1:1|c|@args", 6, 1 },
 	{ "github.auth.fingerprint.sha1:1|g", 0, 1 },
 	{ "lol:1|ms", 0, 1 },
 	{ "lol.b:2|ms@0.1", 0, 2 },
-	{ "lol.b:2|ms@nan", -1, -1 },
-	{ "lol.b:2|ms@-0.1", -1, 2 },
-	{ "lol.b:2|ms@1.14", -1, 2 },
-	{ "lol.c:2|ms|@1.14", -1, 2 },
+	{ "lol.b:2|ms@nan", 6, -1 },
+	{ "lol.b:2|ms@-0.1", 6, 2 },
+	{ "lol.b:2|ms@1.14", 6, 2 },
+	{ "lol.c:2|ms|@1.14", 6, 2 },
 	{ "this.is.sparta:199812|C", 0, 199812 },
 	{ "this.is.sparta:0012|h", 0, 12 },
 	{ "this.is.sparta:23.23|g", 0, 23.23 },
@@ -64,7 +64,7 @@ void test_statsd_msg__parse_strings(void)
 	}
 
 #define EXPECT "some.non-float.value"
-	try_parse_set(&msg, "this.is.a.set:" EXPECT "|s|@args", -1, EXPECT);
+	try_parse_set(&msg, "this.is.a.set:" EXPECT "|s|@args", 6, EXPECT);
 	try_parse_set(&msg, "this.is.a.set:" EXPECT "|s", 0, EXPECT);
 }
 
