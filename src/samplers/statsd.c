@@ -88,6 +88,7 @@ static void statsd_run_recvmmsg(struct brubeck_statsd *statsd, int sock)
 
 		/* store stats */
 		brubeck_atomic_add(&statsd->sampler.inflow, SIM_PACKETS);
+		brubeck_atomic_add(&server->stats.packets, SIM_PACKETS);
 
 		for (i = 0; i < SIM_PACKETS; ++i) {
 			char *buf = msgs[i].msg_hdr.msg_iov->iov_base;
@@ -126,6 +127,7 @@ static void statsd_run_recvmsg(struct brubeck_statsd *statsd, int sock)
 
 		/* store stats */
 		brubeck_atomic_inc(&statsd->sampler.inflow);
+		brubeck_atomic_inc(&server->stats.packets);
 
 		brubeck_statsd_split_buffer(&statsd->sampler, buffer, res, &reporter.sin_addr);
 	}

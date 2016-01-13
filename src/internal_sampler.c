@@ -16,6 +16,11 @@ brubeck_internal__sample(struct brubeck_metric *metric, brubeck_sample_cb sample
 		sample(key, value, opaque);
 	}
 
+	WITH_SUFFIX(".packets") {
+		value = brubeck_atomic_swap(&stats->packets, 0);
+		sample(key, value, opaque);
+	}
+
 	WITH_SUFFIX(".errors") {
 		value = brubeck_atomic_swap(&stats->errors, 0);
 		sample(key, value, opaque);
