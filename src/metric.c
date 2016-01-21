@@ -98,15 +98,7 @@ counter__record(struct brubeck_metric *metric, sample_value_t value, value_t sam
 
 	pthread_spin_lock(&metric->lock);
 	{
-		if (metric->as.counter.previous > 0.0) {
-			value_t diff = (n >= metric->as.counter.previous) ?
-				(n - metric->as.counter.previous) :
-				(n);
-
-			metric->as.counter.value += diff;
-		}
-
-		metric->as.counter.previous = n;
+		metric->as.counter.value += n;
 	}
 	pthread_spin_unlock(&metric->lock);
 }

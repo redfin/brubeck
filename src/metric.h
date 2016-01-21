@@ -38,7 +38,7 @@ struct brubeck_metric {
 			value_t value;
 		} gauge, meter;
 		struct {
-			value_t value, previous;
+			value_t value;
 		} counter;
 		brubeck_hashset_t *set;
 		struct brubeck_histo histogram;
