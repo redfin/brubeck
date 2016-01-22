@@ -6,11 +6,13 @@ struct sput __sput;
 void test_histogram__sampling(void);
 void test_histogram__single_element(void);
 void test_histogram__large_range(void);
+void test_histogram__scaling(void);
 
 void test_mstore__save(void);
 void test_atomic_spinlocks(void);
 void test_ftoa(void);
 void test_statsd_msg__parse_strings(void);
+void test_statsd_msg__split_buffer(void);
 
 int main(int argc, char *argv[])
 {
@@ -20,6 +22,7 @@ int main(int argc, char *argv[])
 	sput_run_test(test_histogram__sampling);
 	sput_run_test(test_histogram__single_element);
 	sput_run_test(test_histogram__large_range);
+	sput_run_test(test_histogram__scaling);
 
 	sput_enter_suite("mstore: concurrency test for metrics hash table");
 	sput_run_test(test_mstore__save);
@@ -32,6 +35,7 @@ int main(int argc, char *argv[])
 
 	sput_enter_suite("statsd: packet parsing");
 	sput_run_test(test_statsd_msg__parse_strings);
+	sput_run_test(test_statsd_msg__split_buffer);
 
 	sput_finish_testing();
 	return sput_get_return_value();

@@ -7,8 +7,8 @@ struct brubeck_statsd_msg {
     char *key;      /* The key of the message, NULL terminated */
     uint16_t key_len; /* length of the key */
     uint16_t type;	/* type of the messaged, as a brubeck_mt_t */
-    value_t value;	/* integer value of the message */
-    char *trail;    /* Any data following the 'key:value|type' construct, NULL terminated*/
+    sample_value_t value;	/* value of the message */
+    value_t sample_rate; /* optional sample rate of the message */
 };
 
 struct brubeck_statsd {
@@ -29,7 +29,8 @@ struct brubeck_statsd_secure {
 	pthread_t thread;
 };
 
-int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer, size_t length);
+int brubeck_statsd_split_buffer(struct brubeck_sampler *sampler, char *buffer, size_t len, struct in_addr *src);
+int brubeck_statsd_msg_parse(struct brubeck_statsd_msg *msg, char *buffer);
 
 struct brubeck_sampler * brubeck_statsd_secure_new(struct brubeck_server *server, json_t *settings);
 struct brubeck_sampler *brubeck_statsd_new(struct brubeck_server *server, json_t *settings);

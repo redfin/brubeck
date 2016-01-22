@@ -22,9 +22,8 @@ new_metric(struct brubeck_server *server, const char *key, size_t key_len, uint8
 	return metric;
 }
 
-typedef void (*mt_prototype_record)(struct brubeck_metric *, value_t);
+typedef void (*mt_prototype_record)(struct brubeck_metric *, sample_value_t, value_t);
 typedef void (*mt_prototype_sample)(struct brubeck_metric *, brubeck_sample_cb, void *);
-
 
 /*********************************************
  * Gauge
@@ -32,11 +31,11 @@ typedef void (*mt_prototype_sample)(struct brubeck_metric *, brubeck_sample_cb, 
  * ALLOC: mt + 4 bytes
  *********************************************/
 static void
-gauge__record(struct brubeck_metric *metric, value_t value)
+gauge__record(struct brubeck_metric *metric, sample_value_t value, value_t sample_rate)
 {
 	pthread_spin_lock(&metric->lock);
 	{
-		metric->as.gauge.value = value;
+		metric->as.gauge.value = value.n;
 	}
 	pthread_spin_unlock(&metric->lock);
 }
@@ -62,11 +61,11 @@ gauge__sample(struct brubeck_metric *metric, brubeck_sample_cb sample, void *opa
  * ALLOC: mt + 4
  *********************************************/
 static void
-meter__record(struct brubeck_metric *metric, value_t value)
+meter__record(struct brubeck_metric *metric, sample_value_t value, value_t sample_rate)
 {
 	pthread_spin_lock(&metric->lock);
 	{
-		metric->as.meter.value += value;
+		metric->as.meter.value += value.n;
 	}
 	pthread_spin_unlock(&metric->lock);
 }
@@ -93,19 +92,13 @@ meter__sample(struct brubeck_metric *metric, brubeck_sample_cb sample, void *opa
  * ALLOC: mt + 4 + 4 + 4
  *********************************************/
 static void
-counter__record(struct brubeck_metric *metric, value_t value)
+counter__record(struct brubeck_metric *metric, sample_value_t value, value_t sample_rate)
 {
+	value_t n = value.n / sample_rate;
+
 	pthread_spin_lock(&metric->lock);
 	{
-		if (metric->as.counter.previous > 0.0) {
-			value_t diff = (value >= metric->as.counter.previous) ?
-				(value - metric->as.counter.previous) :
-				(value);
-
-			metric->as.counter.value += diff;
-		}
-
-		metric->as.counter.previous = value;
+		metric->as.counter.value += n;
 	}
 	pthread_spin_unlock(&metric->lock);
 }
@@ -132,11 +125,11 @@ counter__sample(struct brubeck_metric *metric, brubeck_sample_cb sample, void *o
  * ALLOC: mt + 16 + 4
  *********************************************/
 static void
-histogram__record(struct brubeck_metric *metric, value_t value)
+histogram__record(struct brubeck_metric *metric, sample_value_t value, value_t sample_rate)
 {
 	pthread_spin_lock(&metric->lock);
 	{
-		brubeck_histo_push(&metric->as.histogram, value);
+		brubeck_histo_push(&metric->as.histogram, value.n, sample_rate);
 	}
 	pthread_spin_unlock(&metric->lock);
 }
@@ -156,14 +149,14 @@ histogram__sample(struct brubeck_metric *metric, brubeck_sample_cb sample, void 
 	/* alloc space for this on the stack. we need enough for:
 	 * key_length + longest_suffix + null terminator
 	 */
-	key = alloca(metric->key_len + strlen(".percentile.999") + 1);
+	key = alloca(metric->key_len + strlen(".upper_99") + 1);
 	memcpy(key, metric->key, metric->key_len);
 
-	WITH_SUFFIX(".min") {
+	WITH_SUFFIX(".lower") {
 		sample(key, hsample.min, opaque);
 	}
 
-	WITH_SUFFIX(".max") {
+	WITH_SUFFIX(".upper") {
 		sample(key, hsample.max, opaque);
 	}
 
@@ -175,33 +168,59 @@ histogram__sample(struct brubeck_metric *metric, brubeck_sample_cb sample, void 
 		sample(key, hsample.mean, opaque);
 	}
 
-	WITH_SUFFIX(".count") {
-		sample(key, hsample.count, opaque);
+	WITH_SUFFIX(".count_ps") {
+		struct brubeck_backend *backend = opaque;
+		sample(key, hsample.count / backend->sample_freq, opaque);
 	}
 
 	WITH_SUFFIX(".median") {
 		sample(key, hsample.median, opaque);
 	}
 
-	WITH_SUFFIX(".percentile.75") {
-		sample(key, hsample.percentile[PC_75], opaque);
+	WITH_SUFFIX(".upper_90") {
+		sample(key, hsample.percentile[PC_90], opaque);
 	}
 
-	WITH_SUFFIX(".percentile.95") {
+	WITH_SUFFIX(".upper_95") {
 		sample(key, hsample.percentile[PC_95], opaque);
 	}
 
-	WITH_SUFFIX(".percentile.98") {
-		sample(key, hsample.percentile[PC_98], opaque);
-	}
-
-	WITH_SUFFIX(".percentile.99") {
+	WITH_SUFFIX(".upper_99") {
 		sample(key, hsample.percentile[PC_99], opaque);
 	}
+}
 
-	WITH_SUFFIX(".percentile.999") {
-		sample(key, hsample.percentile[PC_999], opaque);
+
+/*********************************************
+ * Set
+ *
+ * ALLOC: ?
+ *********************************************/
+static void
+set__record(struct brubeck_metric *metric, sample_value_t value, value_t sample_rate)
+{
+	pthread_spin_lock(&metric->lock);
+	{
+		brubeck_set_add(metric, value.s);
 	}
+	pthread_spin_unlock(&metric->lock);
+}
+
+static void
+set__sample(struct brubeck_metric *metric, brubeck_sample_cb sample, void *opaque)
+{
+	value_t value = 0.0;
+
+	pthread_spin_lock(&metric->lock);
+	{
+		if(NULL != metric->as.set) {
+			value = brubeck_set_size(metric->as.set);
+			brubeck_set_clear(metric->as.set);
+		}
+	}
+	pthread_spin_unlock(&metric->lock);
+
+	sample(metric->key, value, opaque);
 }
 
 /********************************************************/
@@ -240,6 +259,12 @@ static struct brubeck_metric__proto {
 		&histogram__sample
 	},
 
+	/* Set */
+	{
+		&set__record,
+		&set__sample
+	},
+
 	/* Internal -- used for sampling brubeck itself */
 	{
 		NULL, /* recorded manually */
@@ -252,9 +277,9 @@ void brubeck_metric_sample(struct brubeck_metric *metric, brubeck_sample_cb cb, 
 	_prototypes[metric->type].sample(metric, cb, backend);
 }
 
-void brubeck_metric_record(struct brubeck_metric *metric, value_t value)
+void brubeck_metric_record(struct brubeck_metric *metric, sample_value_t value, value_t sample_rate)
 {
-	_prototypes[metric->type].record(metric, value);
+	_prototypes[metric->type].record(metric, value, sample_rate);
 }
 
 struct brubeck_metric *

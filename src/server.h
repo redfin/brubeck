@@ -26,6 +26,7 @@ struct brubeck_server {
 
 	struct brubeck_internal_stats {
 		pthread_t thread;
+		uint32_t packets;
 		uint32_t metrics;
 		uint32_t errors;
 		uint32_t unique_keys;
