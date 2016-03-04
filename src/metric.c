@@ -168,6 +168,10 @@ histogram__sample(struct brubeck_metric *metric, brubeck_sample_cb sample, void 
 		sample(key, hsample.mean, opaque);
 	}
 
+	WITH_SUFFIX(".count") {
+		sample(key, hsample.count, opaque);
+	}
+
 	WITH_SUFFIX(".count_ps") {
 		struct brubeck_backend *backend = opaque;
 		sample(key, hsample.count / backend->sample_freq, opaque);
