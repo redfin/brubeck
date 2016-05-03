@@ -115,7 +115,9 @@ counter__sample(struct brubeck_metric *metric, brubeck_sample_cb sample, void *o
 	}
 	pthread_spin_unlock(&metric->lock);
 
-	sample(metric->key, value, opaque);
+	if(value) {
+		sample(metric->key, value, opaque);
+	}
 }
 
 
@@ -145,6 +147,10 @@ histogram__sample(struct brubeck_metric *metric, brubeck_sample_cb sample, void 
 		brubeck_histo_sample(&hsample, &metric->as.histogram);
 	}
 	pthread_spin_unlock(&metric->lock);
+
+	if(!hsample.count) {
+		return;
+	}
 
 	/* alloc space for this on the stack. we need enough for:
 	 * key_length + longest_suffix + null terminator
