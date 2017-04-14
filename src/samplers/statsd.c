@@ -10,7 +10,7 @@
 #	endif
 #endif
 
-#define MAX_PACKET_SIZE 512
+#define MAX_PACKET_SIZE 1500
 
 int
 brubeck_statsd_split_buffer(struct brubeck_sampler *sampler, char *buffer, size_t len, struct in_addr *src)
